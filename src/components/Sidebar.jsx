@@ -15,7 +15,9 @@ function Sidebar({ onMenuClick }) {
 
     return (
         <div className="bg-gray-800 text-white w-64 space-y-6 py-7 px-2 absolute inset-y-0 left-0 transform -translate-x-full md:relative md:translate-x-0 transition duration-200 ease-in-out">
-            <h1 className="text-3xl font-bold text-center">Dashboard</h1>
+            {/* ✅ Updated title */}
+            <h1 className="text-3xl font-bold text-center">D7 Matka Admin</h1>
+
             <nav>
                 <button
                     onClick={() => onMenuClick('Users')}
@@ -59,6 +61,7 @@ function Sidebar({ onMenuClick }) {
                 >
                     Platform Settings
                 </button>
+
                 {/* Conditionally Render Admins Option */}
                 {userEmail === 'pranshu@dpmatka.com' && (
                     <button
@@ -68,6 +71,7 @@ function Sidebar({ onMenuClick }) {
                         Admins
                     </button>
                 )}
+
                 <button
                     onClick={handleLogout}
                     className="block w-full text-left py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700"
