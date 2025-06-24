@@ -11,13 +11,18 @@ function PlatformSettings() {
         qrCodeUrl: '',
         bannerImageUrl: '',
         whatsAppNumber: '',
-        pin: '' // ✅ New PIN field added
+        pin: '' // For display only, not for access control
     });
+    const [pinAccess, setPinAccess] = useState(false);
+    const [enteredPin, setEnteredPin] = useState('');
+    const CORRECT_PIN = '1603'; // 🔐 Hardcoded access PIN
 
     const [qrImage, setQrImage] = useState(null);
     const [bannerImage, setBannerImage] = useState(null);
 
     useEffect(() => {
+        if (!pinAccess) return; // prevent fetch unless pin is entered
+
         const fetchSettings = async () => {
             try {
                 const response = await axios.get('https://backend-pbn5.onrender.com/api/admin/platform-settings', {
@@ -32,7 +37,7 @@ function PlatformSettings() {
                     bannerImageUrl,
                     qrCodeUrl,
                     whatsAppNumber,
-                    pin // ✅ Add PIN field from response
+                    pin
                 } = response.data;
 
                 setSettings({
@@ -52,7 +57,16 @@ function PlatformSettings() {
         };
 
         fetchSettings();
-    }, []);
+    }, [pinAccess]);
+
+    const handlePinSubmit = (e) => {
+        e.preventDefault();
+        if (enteredPin === CORRECT_PIN) {
+            setPinAccess(true);
+        } else {
+            alert("❌ Incorrect PIN!");
+        }
+    };
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -80,7 +94,7 @@ function PlatformSettings() {
         formData.append('adminContact[phone]', settings.adminPhone);
         formData.append('adminContact[address]', settings.adminAddress);
         formData.append('whatsAppNumber', settings.whatsAppNumber);
-        formData.append('pin', settings.pin); // ✅ Send the PIN field
+        formData.append('pin', settings.pin);
 
         if (qrImage) formData.append('qrCode', qrImage);
         if (bannerImage) formData.append('bannerImage', bannerImage);
@@ -93,12 +107,36 @@ function PlatformSettings() {
                 }
             });
             alert('Settings updated successfully!');
-            console.log(response.data);
         } catch (error) {
             console.error('Error updating settings', error);
         }
     };
 
+    // 🔐 PIN Lock Screen UI
+    if (!pinAccess) {
+        return (
+            <div className="container mx-auto p-8">
+                <h2 className="text-2xl font-bold mb-4">🔒 Enter PIN to access Platform Settings</h2>
+                <form onSubmit={handlePinSubmit} className="bg-white p-6 rounded shadow w-full max-w-sm mx-auto">
+                    <input
+                        type="password"
+                        className="border border-gray-300 p-2 w-full rounded mb-4"
+                        placeholder="Enter PIN"
+                        value={enteredPin}
+                        onChange={(e) => setEnteredPin(e.target.value)}
+                    />
+                    <button
+                        type="submit"
+                        className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded w-full"
+                    >
+                        Unlock
+                    </button>
+                </form>
+            </div>
+        );
+    }
+
+    // ✅ Main Settings UI (only after correct PIN)
     return (
         <div className="container mx-auto p-4">
             <h2 className="text-lg font-bold mb-4">Platform Settings</h2>
@@ -112,7 +150,7 @@ function PlatformSettings() {
                         <li><strong>Admin Phone:</strong> {settings.adminPhone}</li>
                         <li><strong>Admin Address:</strong> {settings.adminAddress}</li>
                         <li><strong>WhatsApp Number:</strong> {settings.whatsAppNumber}</li>
-                        <li><strong>PIN:</strong> {settings.pin}</li> {/* ✅ Display PIN */}
+                        <li><strong>PIN Code:</strong> {settings.pin}</li>
                         <li><strong>QR Code:</strong> <img src={settings.qrCodeUrl} alt="QR Code" style={{ width: '100px', height: '100px' }} /></li>
                         <li><strong>Banner Image:</strong> <img src={settings.bannerImageUrl} alt="Banner" style={{ width: '300px', height: '100px' }} /></li>
                     </ul>
@@ -120,43 +158,29 @@ function PlatformSettings() {
                 <div>
                     <h3 className="text-md font-bold mb-2">Edit Settings</h3>
                     <form onSubmit={handleSubmit}>
+                        {[
+                            { id: 'upiId', label: 'UPI ID' },
+                            { id: 'adminName', label: 'Admin Contact Name' },
+                            { id: 'adminEmail', label: 'Admin Contact Email', type: 'email' },
+                            { id: 'adminPhone', label: 'Admin Contact Phone', type: 'tel' },
+                            { id: 'adminAddress', label: 'Admin Contact Address' },
+                            { id: 'whatsAppNumber', label: 'WhatsApp Number' },
+                            { id: 'pin', label: 'Platform PIN' },
+                        ].map(({ id, label, type = 'text' }) => (
+                            <div className="mb-4" key={id}>
+                                <label htmlFor={id} className="block mb-2">{label}:</label>
+                                <input type={type} id={id} name={id} value={settings[id]} onChange={handleChange} className="p-2 border rounded w-full" />
+                            </div>
+                        ))}
                         <div className="mb-4">
-                            <label htmlFor="upiId" className="block mb-2">UPI ID:</label>
-                            <input type="text" id="upiId" name="upiId" value={settings.upiId} onChange={handleChange} className="p-2 border rounded" />
-                        </div>
-                        <div className="mb-4">
-                            <label htmlFor="adminName" className="block mb-2">Admin Contact Name:</label>
-                            <input type="text" id="adminName" name="adminName" value={settings.adminName} onChange={handleChange} className="p-2 border rounded" />
-                        </div>
-                        <div className="mb-4">
-                            <label htmlFor="adminEmail" className="block mb-2">Admin Contact Email:</label>
-                            <input type="email" id="adminEmail" name="adminEmail" value={settings.adminEmail} onChange={handleChange} className="p-2 border rounded" />
-                        </div>
-                        <div className="mb-4">
-                            <label htmlFor="adminPhone" className="block mb-2">Admin Contact Phone:</label>
-                            <input type="tel" id="adminPhone" name="adminPhone" value={settings.adminPhone} onChange={handleChange} className="p-2 border rounded" />
-                        </div>
-                        <div className="mb-4">
-                            <label htmlFor="adminAddress" className="block mb-2">Admin Contact Address:</label>
-                            <input type="text" id="adminAddress" name="adminAddress" value={settings.adminAddress} onChange={handleChange} className="p-2 border rounded" />
-                        </div>
-                        <div className="mb-4">
-                            <label htmlFor="qrCode" className="block mb-2">Upload New QR Code:</label>
+                            <label htmlFor="qrCode" className="block mb-2">Upload QR Code:</label>
                             <input type="file" id="qrCode" onChange={(e) => handleImageChange(e, 'qrCode')} className="p-2 border rounded" />
                         </div>
                         <div className="mb-4">
-                            <label htmlFor="bannerImage" className="block mb-2">Upload New Banner Image:</label>
+                            <label htmlFor="bannerImage" className="block mb-2">Upload Banner Image:</label>
                             <input type="file" id="bannerImage" onChange={(e) => handleImageChange(e, 'banner')} className="p-2 border rounded" />
                         </div>
-                        <div className="mb-4">
-                            <label htmlFor="whatsAppNumber" className="block mb-2">WhatsApp Number:</label>
-                            <input type="text" id="whatsAppNumber" name="whatsAppNumber" value={settings.whatsAppNumber} onChange={handleChange} className="p-2 border rounded" />
-                        </div>
-                        <div className="mb-4">
-                            <label htmlFor="pin" className="block mb-2">Platform PIN:</label>
-                            <input type="text" id="pin" name="pin" value={settings.pin} onChange={handleChange} className="p-2 border rounded" />
-                        </div>
-                        <button type="submit" className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                        <button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">
                             Save Changes
                         </button>
                     </form>
