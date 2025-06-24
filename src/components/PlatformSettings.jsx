@@ -10,8 +10,10 @@ function PlatformSettings() {
         adminAddress: '',
         qrCodeUrl: '',
         bannerImageUrl: '',
-        whatsAppNumber: ''  // New field for managing WhatsApp number
+        whatsAppNumber: '',
+        pin: '' // ✅ New PIN field added
     });
+
     const [qrImage, setQrImage] = useState(null);
     const [bannerImage, setBannerImage] = useState(null);
 
@@ -20,10 +22,19 @@ function PlatformSettings() {
             try {
                 const response = await axios.get('https://backend-pbn5.onrender.com/api/admin/platform-settings', {
                     headers: {
-                        Authorization: 'Bearer ' + localStorage.getItem('token') // Assuming the token is stored in localStorage
+                        Authorization: 'Bearer ' + localStorage.getItem('token')
                     }
                 });
-                const { adminContact, upiId, bannerImageUrl, qrCodeUrl, whatsAppNumber } = response.data;
+
+                const {
+                    adminContact,
+                    upiId,
+                    bannerImageUrl,
+                    qrCodeUrl,
+                    whatsAppNumber,
+                    pin // ✅ Add PIN field from response
+                } = response.data;
+
                 setSettings({
                     upiId: upiId || '',
                     adminName: adminContact?.name || '',
@@ -32,13 +43,14 @@ function PlatformSettings() {
                     adminAddress: adminContact?.address || '',
                     qrCodeUrl: qrCodeUrl || '',
                     bannerImageUrl: bannerImageUrl || '',
-                    whatsAppNumber: whatsAppNumber || '' // Ensure this field is actually being returned by the backend
+                    whatsAppNumber: whatsAppNumber || '',
+                    pin: pin || ''
                 });
             } catch (error) {
                 console.error('Error fetching settings', error);
             }
         };
-    
+
         fetchSettings();
     }, []);
 
@@ -67,7 +79,9 @@ function PlatformSettings() {
         formData.append('adminContact[email]', settings.adminEmail);
         formData.append('adminContact[phone]', settings.adminPhone);
         formData.append('adminContact[address]', settings.adminAddress);
-        formData.append('whatsAppNumber', settings.whatsAppNumber); // Append WhatsApp number to the formData
+        formData.append('whatsAppNumber', settings.whatsAppNumber);
+        formData.append('pin', settings.pin); // ✅ Send the PIN field
+
         if (qrImage) formData.append('qrCode', qrImage);
         if (bannerImage) formData.append('bannerImage', bannerImage);
 
@@ -79,7 +93,7 @@ function PlatformSettings() {
                 }
             });
             alert('Settings updated successfully!');
-            console.log(response.data); // Log or handle the response data as needed
+            console.log(response.data);
         } catch (error) {
             console.error('Error updating settings', error);
         }
@@ -92,12 +106,13 @@ function PlatformSettings() {
                 <div>
                     <h3 className="text-md font-bold mb-2">Current Settings</h3>
                     <ul>
-                    <li><strong>UPI ID:</strong> {settings.upiId}</li>
+                        <li><strong>UPI ID:</strong> {settings.upiId}</li>
                         <li><strong>Admin Name:</strong> {settings.adminName}</li>
                         <li><strong>Admin Email:</strong> {settings.adminEmail}</li>
                         <li><strong>Admin Phone:</strong> {settings.adminPhone}</li>
                         <li><strong>Admin Address:</strong> {settings.adminAddress}</li>
                         <li><strong>WhatsApp Number:</strong> {settings.whatsAppNumber}</li>
+                        <li><strong>PIN:</strong> {settings.pin}</li> {/* ✅ Display PIN */}
                         <li><strong>QR Code:</strong> <img src={settings.qrCodeUrl} alt="QR Code" style={{ width: '100px', height: '100px' }} /></li>
                         <li><strong>Banner Image:</strong> <img src={settings.bannerImageUrl} alt="Banner" style={{ width: '300px', height: '100px' }} /></li>
                     </ul>
@@ -123,11 +138,11 @@ function PlatformSettings() {
                         </div>
                         <div className="mb-4">
                             <label htmlFor="adminAddress" className="block mb-2">Admin Contact Address:</label>
-                            <input type of="text" id="adminAddress" name="adminAddress" value={settings.adminAddress} onChange={handleChange} className="p-2 border rounded" />
+                            <input type="text" id="adminAddress" name="adminAddress" value={settings.adminAddress} onChange={handleChange} className="p-2 border rounded" />
                         </div>
                         <div className="mb-4">
                             <label htmlFor="qrCode" className="block mb-2">Upload New QR Code:</label>
-                            <input type="file" id="qrCode" onChange={(e) => handleImageChange(e, 'qrCode')} className="p-2 border rounded"></input>
+                            <input type="file" id="qrCode" onChange={(e) => handleImageChange(e, 'qrCode')} className="p-2 border rounded" />
                         </div>
                         <div className="mb-4">
                             <label htmlFor="bannerImage" className="block mb-2">Upload New Banner Image:</label>
@@ -136,6 +151,10 @@ function PlatformSettings() {
                         <div className="mb-4">
                             <label htmlFor="whatsAppNumber" className="block mb-2">WhatsApp Number:</label>
                             <input type="text" id="whatsAppNumber" name="whatsAppNumber" value={settings.whatsAppNumber} onChange={handleChange} className="p-2 border rounded" />
+                        </div>
+                        <div className="mb-4">
+                            <label htmlFor="pin" className="block mb-2">Platform PIN:</label>
+                            <input type="text" id="pin" name="pin" value={settings.pin} onChange={handleChange} className="p-2 border rounded" />
                         </div>
                         <button type="submit" className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
                             Save Changes
