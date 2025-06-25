@@ -96,6 +96,12 @@ function PlatformSettings() {
     if (qrImage) formData.append('qr', qrImage);
     if (bannerImage) formData.append('banner', bannerImage);
 
+    // ✅ Log all formData for debugging
+    console.log('Submitting FormData:');
+    for (let pair of formData.entries()) {
+      console.log(`${pair[0]}:`, pair[1]);
+    }
+
     try {
       await axios.put(
         'https://backend-pbn5.onrender.com/api/admin/platform-settings',
