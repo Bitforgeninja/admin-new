@@ -11,7 +11,6 @@ function PlatformSettings() {
         qrCodeUrl: '',
         bannerImageUrl: '',
         whatsAppNumber: '',
-        pin: '' // For display only, not for access control
     });
     const [pinAccess, setPinAccess] = useState(false);
     const [enteredPin, setEnteredPin] = useState('');
@@ -21,7 +20,7 @@ function PlatformSettings() {
     const [bannerImage, setBannerImage] = useState(null);
 
     useEffect(() => {
-        if (!pinAccess) return; // prevent fetch unless pin is entered
+        if (!pinAccess) return;
 
         const fetchSettings = async () => {
             try {
@@ -37,7 +36,6 @@ function PlatformSettings() {
                     bannerImageUrl,
                     qrCodeUrl,
                     whatsAppNumber,
-                    pin
                 } = response.data;
 
                 setSettings({
@@ -49,7 +47,6 @@ function PlatformSettings() {
                     qrCodeUrl: qrCodeUrl || '',
                     bannerImageUrl: bannerImageUrl || '',
                     whatsAppNumber: whatsAppNumber || '',
-                    pin: pin || ''
                 });
             } catch (error) {
                 console.error('Error fetching settings', error);
@@ -94,25 +91,30 @@ function PlatformSettings() {
         formData.append('adminContact[phone]', settings.adminPhone);
         formData.append('adminContact[address]', settings.adminAddress);
         formData.append('whatsAppNumber', settings.whatsAppNumber);
-        formData.append('pin', settings.pin);
 
-        if (qrImage) formData.append('qrCode', qrImage);
-        if (bannerImage) formData.append('bannerImage', bannerImage);
+        // Correct field names
+        if (qrImage) formData.append('qr', qrImage);
+        if (bannerImage) formData.append('banner', bannerImage);
 
         try {
-            const response = await axios.put('https://backend-pbn5.onrender.com/api/admin/platform-settings', formData, {
-                headers: {
-                    'Content-Type': 'multipart/form-data',
-                    Authorization: 'Bearer ' + localStorage.getItem('token')
+            const response = await axios.put(
+                'https://backend-pbn5.onrender.com/api/admin/platform-settings',
+                formData,
+                {
+                    headers: {
+                        'Content-Type': 'multipart/form-data',
+                        Authorization: 'Bearer ' + localStorage.getItem('token')
+                    }
                 }
-            });
-            alert('Settings updated successfully!');
+            );
+            alert('✅ Settings updated successfully.');
+            window.location.reload(); // Reload to see updated image
         } catch (error) {
-            console.error('Error updating settings', error);
+            console.error('Error updating settings:', error);
+            alert('❌ Failed to update settings.');
         }
     };
 
-    // 🔐 PIN Lock Screen UI
     if (!pinAccess) {
         return (
             <div className="container mx-auto p-8">
@@ -136,7 +138,6 @@ function PlatformSettings() {
         );
     }
 
-    // ✅ Main Settings UI (only after correct PIN)
     return (
         <div className="container mx-auto p-4">
             <h2 className="text-lg font-bold mb-4">Platform Settings</h2>
@@ -150,7 +151,6 @@ function PlatformSettings() {
                         <li><strong>Admin Phone:</strong> {settings.adminPhone}</li>
                         <li><strong>Admin Address:</strong> {settings.adminAddress}</li>
                         <li><strong>WhatsApp Number:</strong> {settings.whatsAppNumber}</li>
-                        <li><strong>PIN Code:</strong> {settings.pin}</li>
                         <li><strong>QR Code:</strong> <img src={settings.qrCodeUrl} alt="QR Code" style={{ width: '100px', height: '100px' }} /></li>
                         <li><strong>Banner Image:</strong> <img src={settings.bannerImageUrl} alt="Banner" style={{ width: '300px', height: '100px' }} /></li>
                     </ul>
@@ -164,8 +164,7 @@ function PlatformSettings() {
                             { id: 'adminEmail', label: 'Admin Contact Email', type: 'email' },
                             { id: 'adminPhone', label: 'Admin Contact Phone', type: 'tel' },
                             { id: 'adminAddress', label: 'Admin Contact Address' },
-                            { id: 'whatsAppNumber', label: 'WhatsApp Number' },
-                            { id: 'pin', label: 'Platform PIN' },
+                            { id: 'whatsAppNumber', label: 'WhatsApp Number' }
                         ].map(({ id, label, type = 'text' }) => (
                             <div className="mb-4" key={id}>
                                 <label htmlFor={id} className="block mb-2">{label}:</label>
@@ -174,11 +173,11 @@ function PlatformSettings() {
                         ))}
                         <div className="mb-4">
                             <label htmlFor="qrCode" className="block mb-2">Upload QR Code:</label>
-                            <input type="file" id="qrCode" onChange={(e) => handleImageChange(e, 'qrCode')} className="p-2 border rounded" />
+                            <input type="file" id="qrCode" onChange={(e) => handleImageChange(e, 'qrCode')} className="p-2 border rounded w-full" />
                         </div>
                         <div className="mb-4">
                             <label htmlFor="bannerImage" className="block mb-2">Upload Banner Image:</label>
-                            <input type="file" id="bannerImage" onChange={(e) => handleImageChange(e, 'banner')} className="p-2 border rounded" />
+                            <input type="file" id="bannerImage" onChange={(e) => handleImageChange(e, 'banner')} className="p-2 border rounded w-full" />
                         </div>
                         <button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">
                             Save Changes
